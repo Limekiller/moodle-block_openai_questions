@@ -32,7 +32,7 @@ class handler {
     private $qtype;
     private $apikey;
 
-    private $last_response = null;
+    private $last_response = '';
     private $questions;
 
     function __construct($sourcetext, $qtype) {
@@ -53,9 +53,9 @@ class handler {
             "temperature" => 1,
             "max_tokens" => 1000,
             "top_p" => 1,
-            "frequency_penalty" => 0.5,
+            "frequency_penalty" => 0.25,
             "presence_penalty" => 0,
-            "stop" => "Answer 5:"
+            "stop" => ['Answer 11:']
         ];
         
         $curl = new \curl();
@@ -66,10 +66,8 @@ class handler {
             ),
         ));
 
-        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-002/completions', json_encode($curlbody));
-        if (!$this->last_response) {
-            $this->last_response = json_decode($response)->choices[0]->text;
-        }
+        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-001/completions', json_encode($curlbody));
+        $this->last_response .= "\n" . json_decode($response)->choices[0]->text;
         return $this->parse_response($response);
     }
 
@@ -82,8 +80,8 @@ class handler {
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function get_next_question_set($number_of_questions) {
-        $prompt = "The following is a paragraph of information, followed by $number_of_questions $this->qtype questions:\n\n";
-        $prompt .= $this->sourcetext . "\n";
+        $prompt = "The following information is followed by $number_of_questions $this->qtype questions:\n\n";
+        $prompt .= $this->sourcetext . "\n\n";
         $prompt .= $this->last_response . "\n";
         return $this->fetch_response($prompt);
     }
@@ -96,9 +94,9 @@ class handler {
     private function get_qtype_prompt() {
         $prompt = "The following is a paragraph of information, followed by three $this->qtype questions:\n\nOn 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete.\n\n";
         $qtype_prompts = [
-            'shortanswer' => "Question 1: On what date did construction start?\nAnswer: 19 March 1882\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer: Francisco de Paula del Villar\n\nQuestion 3: How much of the project was completed when Gaudi died?\nAnswer: Less than a quarter\n\n-----\n\nThe following is another paragraph, along with three question and answer pairs:\n\n",
-            'truefalse' => "Question 1: Construction started on 19 March 1882\nAnswer: True\n\nQuestion 2: The original architect was Antoni Gaudi.\nAnswer: False\n\nQuestion 3: Over half of the basilica was finished when Gaudi died.\nAnswer: False\n\n-----\n\nThe following is another paragraph, along with three question and answer pairs:\n\n",
-            'multiplechoice' => "Question 1: On what date did construction start?\nAnswer A (correct): 1882\nAnswer B: 1893\nAnswer C: 1926\nAnswer D: 1918\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer A: Antoni Gaudi\nAnswer B: Francsico de Goya\nAnswer C (correct): Francisco de Paula del Villar\nAnswer D: Louis Sullivan\n\nQuestion 3: How much of the basilica was finished when Gaudi died?\nAnswer A: Over a third\nAnswer B: Nearly all of it\nAnswer C: Around half\nAnswer D (correct): Less than a quarter\n\n-----\n\nThe following is another paragraph, along with three $this->qtype questions:\n\n"
+            'shortanswer' => "Question 1: On what date did construction start?\nAnswer: 19 March 1882\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer: Francisco de Paula del Villar\n\nQuestion 3: How much of the project was completed when Gaudi died?\nAnswer: Less than a quarter\n\n-----\n\nThe following is another excerpt, again followed by three short answer questions:\n\n",
+            'truefalse' => "Question 1: Construction started on 19 March 1882\nAnswer: True\n\nQuestion 2: The original architect was Antoni Gaudi.\nAnswer: False\n\nQuestion 3: Over half of the basilica was finished when Gaudi died.\nAnswer: False\n\n-----\n\nThe following is another excerpt, again followed by three true/false questions:\n\n",
+            'multiplechoice' => "Question 1: On what date did construction start?\nAnswer A (correct): 1882\nAnswer B: 1893\nAnswer C: 1926\nAnswer D: 1918\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer A: Antoni Gaudi\nAnswer B: Francsico de Goya\nAnswer C (correct): Francisco de Paula del Villar\nAnswer D: Louis Sullivan\n\nQuestion 3: How much of the basilica was finished when Gaudi died?\nAnswer A: Over a third\nAnswer B: Nearly all of it\nAnswer C: Around half\nAnswer D (correct): Less than a quarter\n\n-----\n\nThe following is another excerpt, again followed by three multiple choice questions:\n\n"
         ];
 
         return $prompt . $qtype_prompts[$this->qtype] . $this->sourcetext . "\n\n";
