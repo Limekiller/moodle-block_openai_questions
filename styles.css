@@ -1,0 +1,28 @@
+.block_openai_questions-question {
+    background: #ececec;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.block_openai_questions-question input, .block_openai_questions-question textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+}
+
+.block_openai_questions-question input {
+    padding: 0.5rem;
+    background: #dcdcdc;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.block_openai_questions-question textarea.title {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.block_openai_questions-question input.correct {
+    background: #91e891;
+}
