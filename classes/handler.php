@@ -47,7 +47,7 @@ class handler {
      * @param int prompt (optional): The prompt to pass to OpenAI
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
-    public function fetch_response($prompt = null) {
+    public function fetch_response($prompt=null, $number_of_questions=3) {
         $curlbody = [
             "prompt" => $prompt ? $prompt : $this->get_qtype_prompt(),
             "temperature" => 1,
@@ -55,7 +55,7 @@ class handler {
             "top_p" => 1,
             "frequency_penalty" => 0.25,
             "presence_penalty" => 0,
-            "stop" => ['Answer 16:']
+            "stop" => ['Answer ' . ($number_of_questions + 1) . ':']
         ];
         
         $curl = new \curl();
@@ -83,7 +83,7 @@ class handler {
         $prompt = "The following information is followed by $number_of_questions $this->qtype questions:\n\n";
         $prompt .= $this->sourcetext . "\n\n";
         $prompt .= $this->last_response . "\n";
-        return $this->fetch_response($prompt);
+        return $this->fetch_response($prompt, $number_of_questions);
     }
 
     /**

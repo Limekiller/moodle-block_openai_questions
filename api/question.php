@@ -31,14 +31,14 @@ require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
 global $DB;
 
+$response = json_decode(file_get_contents('php://input'));
+
 require_login();
 $course_context = context_course::instance($response->courseid);
 if (!has_capability('moodle/course:manageactivities', $course_context)) {
     http_response_code(401);
     die();
 }
-
-$response = json_decode(file_get_contents('php://input'));
 
 // Figure out the ID of the "top" category for this course
 $sql = "SELECT id from {question_categories} WHERE contextid = ?";

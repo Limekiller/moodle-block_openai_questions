@@ -45,4 +45,12 @@ class generate_form extends moodleform {
 
         $this->add_action_buttons();
     }
+
+    public function validation($data, $files) {
+        $errors = [];
+        if ($data['number_of_questions'] === 0) {
+            $errors['number_of_questions'] = get_string('notanumber', 'block_openai_questions');
+        }
+        return $errors;
+    }
 }

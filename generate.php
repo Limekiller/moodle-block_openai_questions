@@ -55,8 +55,7 @@ if ($mform->is_cancelled()) {
   $handler = new handler($fromform->sourcetext, $fromform->qtype);
   $questions = [];
   $questions = $handler->fetch_response(); // Initial prompt with example question and answers generates three questions
-  $questions = $handler->get_next_question_set('fifteen (15)'); // Now feed the user-submitted text and generated questions back in to try to get more. Right now, the user-inputted question num is ignored
-  $questions = $handler->get_next_question_set('fifteen (15)'); // Now feed the user-submitted text and generated questions back in to try to get more. Right now, the user-inputted question num is ignored
+  $questions = $handler->get_next_question_set($fromform->number_of_questions); // Now feed the user-submitted text and generated questions back in to try to get more
 
   $output = html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->courseid, 'id' => 'courseid']);
   $output .= html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->qtype, 'id' => 'qtype']);
