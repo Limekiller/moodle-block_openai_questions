@@ -1,7 +1,7 @@
 const init = () => {
     document.querySelectorAll('.block_openai_questions-question .delete').forEach(button => {
         button.addEventListener('click', e => {
-            e.target.closest('.block_openai_questions-question').remove()
+            removeQuestion(e.target.closest('.block_openai_questions-question'))
         })
     })
 
@@ -32,12 +32,28 @@ const buildQuestionObj = () => {
             }
             answers[answer.dataset.qid] = answer.value.trim()
         })
-        questions['questions'][questionElem.querySelector('textarea').textContent] = {}
-        questions['questions'][questionElem.querySelector('textarea').textContent]['answers'] = answers
-        questions['questions'][questionElem.querySelector('textarea').textContent]['correct'] = correct
+        questions['questions'][questionElem.querySelector('textarea').value] = {}
+        questions['questions'][questionElem.querySelector('textarea').value]['answers'] = answers
+        questions['questions'][questionElem.querySelector('textarea').value]['correct'] = correct
     })
     questions['courseid'] = document.querySelector('#courseid').value;
     questions['qtype'] = document.querySelector('#qtype').value;
 
     return questions
+}
+
+const removeQuestion = (elem) => {
+    elem.style.opacity = '0'
+    elem.style.maxHeight = elem.clientHeight + 'px'
+    window.setTimeout(() => {
+
+        elem.style.maxHeight = '0px'
+        elem.style.padding = '0'
+        elem.style.marginTop = '-1rem'
+
+        window.setTimeout(() => {
+            elem.remove()
+        }, 400)
+
+    }, 400)
 }

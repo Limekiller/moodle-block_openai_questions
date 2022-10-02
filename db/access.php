@@ -29,23 +29,21 @@ $capabilities = array(
     'block/openai_questions:myaddinstance' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
-        'archetypes' => array(
-		   'manager' => CAP_PREVENT,
-		   'student' => CAP_PREVENT
-        ),
+        'archetypes' => array(),
 
         'clonepermissionsfrom' => 'moodle/my:manageblocks'
     ),
 
     'block/openai_questions:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
+
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,			
-            'guest' => CAP_PREVENT,			
-   		'student' => CAP_PREVENT
+            'manager' => CAP_ALLOW,
+            'guest' => CAP_PREVENT,
+            'student' => CAP_PREVENT
         ),
 
         'clonepermissionsfrom' => 'moodle/site:manageblocks'

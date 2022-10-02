@@ -4,6 +4,7 @@
     border-radius: 0.25rem;
     margin-bottom: 1rem;
     display: flex;
+    transition: all 0.2s ease;
 }
 
 .block_openai_questions-question input, .block_openai_questions-question textarea {

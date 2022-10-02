@@ -36,7 +36,7 @@ if (!has_capability('block/openai_questions:addinstance', context_course::instan
 }
 
 $PAGE->set_context(context_system::instance());
-$PAGE->set_context(context_course::instance($courseid));
+// $PAGE->set_context(context_course::instance($courseid));
 
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($pagetitle);
