@@ -46,7 +46,9 @@ $sql = "SELECT id from {question_categories} WHERE parent = ?";
 $category_id = $DB->get_records_sql($sql, [$top_category_id_for_course]);
 $category_id = reset($category_id)->id;
 
-foreach ($response->questions as $question => $answer_array) {
+foreach ($response->questions as $question => $question_data) {
+    $answer_array = $question_data->answers;
+
     $question_obj = new stdClass();
     $question_obj->category  = $category_id;
     $question_obj->qtype     = $response->qtype;
@@ -59,17 +61,17 @@ foreach ($response->questions as $question => $answer_array) {
         'format' => '1',
         'text' => $question   
     ];
-    $form->penalty = 1;
+    $form->generalfeedback = [
+        'format' => '1',
+        'text' => ''
+    ];
+    $form->defaultmark = 1;
+    $form->penalty = 0;
     $form->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_READY;
 
     switch ($response->qtype) {
         case 'truefalse':
             $form->correctanswer = $answer_array->A == 'True' ? 1 : 0;
-            $form->defaultmark = 1;
-
-            $form->generalfeedback = array();
-            $form->generalfeedback['format'] = '1';
-            $form->generalfeedback['text'] = '';
         
             $form->feedbacktrue = array();
             $form->feedbacktrue['format'] = '1';
@@ -81,15 +83,35 @@ foreach ($response->questions as $question => $answer_array) {
             break;
         
         case 'shortanswer':
-            $form->defaultmark = 1.0;
-            $form->generalfeedback = [
-                'format' => '1',
-                'text' => ''
-            ];
             $form->usecase = false;
             $form->answer = [$answer_array->A];
             $form->fraction = ['1.0'];
             $form->feedback = [''];
+            break;
+
+        case 'multichoice':
+            $form->noanswers = 4;
+            $form->numhints = 0;
+            $form->shuffleanswers = 1;
+            $form->answernumbering = 'ABCD';
+            $form->showstandardinstruction = 0;
+            $form->single = '1';
+            $form->answer = $form->feedback = $form->fraction = [];
+            $form->shownumcorrect = 0;
+
+            $form->correctfeedback = ['text' => '', 'format' => '1'];
+            $form->partiallycorrectfeedback = ['text' => '', 'format' => '1'];
+            $form->incorrectfeedback = ['text' => '', 'format' => '1'];
+
+            if (!isset($quetion_data->correct)) {
+                $question_data->correct = 'A';
+            }
+
+            foreach ($answer_array as $letter => $answer) {
+                array_push($form->answer, ['text' => $answer, 'format' => '1']);
+                array_push($form->feedback, ['text' => '', 'format' => '1']);
+                array_push($form->fraction, $question_data->correct == $letter ? '1' : '0');
+            }
             break;
     }
 

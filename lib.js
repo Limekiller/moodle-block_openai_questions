@@ -25,10 +25,16 @@ const buildQuestionObj = () => {
     let questions = {'questions': {}}
     document.querySelectorAll('.block_openai_questions-question').forEach(questionElem => {
         let answers = {}
+        let correct = 'A';
         questionElem.querySelectorAll('input').forEach(answer => {
+            if (answer.classList.contains('correct')) {
+                correct = answer.dataset.qid
+            }
             answers[answer.dataset.qid] = answer.value.trim()
         })
-        questions['questions'][questionElem.querySelector('textarea').textContent] = answers
+        questions['questions'][questionElem.querySelector('textarea').textContent] = {}
+        questions['questions'][questionElem.querySelector('textarea').textContent]['answers'] = answers
+        questions['questions'][questionElem.querySelector('textarea').textContent]['correct'] = correct
     })
     questions['courseid'] = document.querySelector('#courseid').value;
     questions['qtype'] = document.querySelector('#qtype').value;
