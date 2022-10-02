@@ -55,7 +55,8 @@ if ($mform->is_cancelled()) {
   $handler = new handler($fromform->sourcetext, $fromform->qtype);
   $questions = [];
   $questions = $handler->fetch_response(); // Initial prompt with example question and answers generates three questions
-  $questions = $handler->get_next_question_set('ten (10)'); // Now feed the user-submitted text and generated questions back in to try to get more. Right now, the user-inputted question num is ignored
+  $questions = $handler->get_next_question_set('fifteen (15)'); // Now feed the user-submitted text and generated questions back in to try to get more. Right now, the user-inputted question num is ignored
+  $questions = $handler->get_next_question_set('fifteen (15)'); // Now feed the user-submitted text and generated questions back in to try to get more. Right now, the user-inputted question num is ignored
 
   $output = html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->courseid, 'id' => 'courseid']);
   $output .= html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->qtype, 'id' => 'qtype']);
@@ -80,7 +81,7 @@ if ($mform->is_cancelled()) {
 
   $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Add to question bank', 'class' => 'btn btn-primary', 'id' => 'addToQBank']);
   $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Regenerate questions', 'class' => 'btn btn-secondary']);
-  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Cancel', 'class' => 'btn btn-secondary']);
+  $output .= html_writer::tag('a', '<input type="submit" class="btn btn-secondary" value="Cancel"/>', ['href' => "/course/view.php?id=$fromform->courseid"]);
 
   echo $output;
   $PAGE->requires->js_init_call('init');

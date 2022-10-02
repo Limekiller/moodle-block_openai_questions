@@ -6,6 +6,10 @@ const init = () => {
     })
 
     document.querySelector('#addToQBank').addEventListener('click', e => {
+        e.target.style.opacity = '0.5'
+        e.target.value = "Please wait..."
+        e.target.style.pointerEvents = 'none'
+        
         const questions = buildQuestionObj()
         fetch('/blocks/openai_questions/api/question.php', {
             method: 'POST',

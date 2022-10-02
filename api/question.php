@@ -27,21 +27,25 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die();
 }
 
-$response = json_decode(file_get_contents('php://input'));
 require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
 global $DB;
 
 require_login();
-// TODO: add capability check for teacher
+$course_context = context_course::instance($response->courseid);
+if (!has_capability('moodle/course:manageactivities', $course_context)) {
+    http_response_code(401);
+    die();
+}
+
+$response = json_decode(file_get_contents('php://input'));
 
 // Figure out the ID of the "top" category for this course
-$course_context = context_course::instance($response->courseid);
 $sql = "SELECT id from {question_categories} WHERE contextid = ?";
 $top_category_id_for_course = $DB->get_records_sql($sql, [$course_context->id]);
 $top_category_id_for_course = reset($top_category_id_for_course)->id;
 
-// Then get the first listed category in the database with this as the parent
+// Then get the first listed category in the database with the "top" as the parent
 $sql = "SELECT id from {question_categories} WHERE parent = ?";
 $category_id = $DB->get_records_sql($sql, [$top_category_id_for_course]);
 $category_id = reset($category_id)->id;

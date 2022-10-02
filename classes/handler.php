@@ -55,7 +55,7 @@ class handler {
             "top_p" => 1,
             "frequency_penalty" => 0.25,
             "presence_penalty" => 0,
-            "stop" => ['Answer 11:']
+            "stop" => ['Answer 16:']
         ];
         
         $curl = new \curl();
