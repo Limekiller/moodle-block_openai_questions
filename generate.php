@@ -28,8 +28,16 @@ use block_openai_questions\handler;
 use block_openai_questions\output\question_page;
 
 $pagetitle = get_string('openai_questions', 'block_openai_questions');
+$courseid = optional_param('id', 1, PARAM_INTEGER);
+
+require_login();
+if (!has_capability('block/openai_questions:addinstance', context_course::instance($courseid))) {
+  throw new moodle_exception('Sorry dawg');
+}
 
 $PAGE->set_context(context_system::instance());
+$PAGE->set_context(context_course::instance($courseid));
+
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($pagetitle);
 $PAGE->set_url($CFG->wwwroot . '/blocks/openai_questions/generate.php');
@@ -79,8 +87,6 @@ if ($mform->is_cancelled()) {
 } else {
   $PAGE->set_heading($pagetitle);
   echo $OUTPUT->header();
-
-  $courseid = optional_param('id', 1, PARAM_INTEGER);
   $mform->set_data(['courseid' => $courseid]);
   $mform->display();
 }

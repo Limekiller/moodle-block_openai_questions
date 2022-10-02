@@ -86,7 +86,7 @@ foreach ($response->questions as $question => $question_data) {
             $form->usecase = false;
             $form->answer = [$answer_array->A];
             $form->fraction = ['1.0'];
-            $form->feedback = [''];
+            $form->feedback = [['text' => '', 'format' => '1']];
             break;
 
         case 'multichoice':

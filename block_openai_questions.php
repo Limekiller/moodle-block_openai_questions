@@ -37,6 +37,11 @@ class block_openai_questions extends block_base {
             return $this->content;
         }
 
+        $context = context_course::instance($this->page->course->id);
+        if (!has_capability('moodle/course:manageactivities', $context)) {
+            return;
+        }
+
         $this->content         =  new stdClass;
         $this->content->text   = 'Click <a href="/blocks/openai_questions/generate.php?id=' . $this->page->course->id . '">here</a> to generate questions';
 
