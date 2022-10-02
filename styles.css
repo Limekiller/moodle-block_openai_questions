@@ -3,6 +3,7 @@
     padding: 1rem;
     border-radius: 0.25rem;
     margin-bottom: 1rem;
+    display: flex;
 }
 
 .block_openai_questions-question input, .block_openai_questions-question textarea {
@@ -11,11 +12,24 @@
     border: none;
 }
 
+.block_openai_questions-question .text-container {
+    width: 100%;
+    margin-right: 1rem;
+}
+
 .block_openai_questions-question input {
     padding: 0.5rem;
     background: #dcdcdc;
     margin-bottom: 0.5rem;
     border-radius: 0.25rem;
+}
+
+.block_openai_questions-question .delete {
+    padding: .25rem;
+    background: rgb(179, 42, 42);
+    color: #fff;
+    border-radius: .25rem;
+    border: none;
 }
 
 .block_openai_questions-question textarea.title {

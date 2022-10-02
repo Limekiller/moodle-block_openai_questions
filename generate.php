@@ -39,8 +39,8 @@ $mform = new generate_form();
 if ($mform->is_cancelled()) {
   var_dump(':/');
   die();
-    //Handle form cancel operation, if cancel button is present on form
 } else if ($fromform = $mform->get_data()) {
+  $PAGE->requires->js('/blocks/openai_questions/lib.js');
   $PAGE->set_heading(get_string('editquestions', 'block_openai_questions'));
   echo $OUTPUT->header();
 
@@ -49,29 +49,39 @@ if ($mform->is_cancelled()) {
   $questions = $handler->fetch_response(); // Initial prompt with example question and answers generates three questions
   $questions = $handler->get_next_question_set('ten (10)'); // Now feed the user-submitted text and generated questions back in to try to get more. Right now, the user-inputted question num is ignored
 
-  $output = '';
-  $output .= html_writer::tag('p', $fromform->sourcetext);
+  $output = html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->courseid, 'id' => 'courseid']);
+  $output .= html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->qtype, 'id' => 'qtype']);
+
   foreach ($questions as $question => $answer_array) {
     $output .= html_writer::start_div('block_openai_questions-question');
+    $output .= html_writer::start_div('text-container');
     $output .= html_writer::tag('textarea', $question, ['class' => 'title']);
     foreach ($answer_array['answers'] as $letter => $answer) {
       if (array_key_exists('correct', $answer_array) && $answer_array['correct'] == $letter) {
-        $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'class' => 'correct']);
+        $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'class' => 'correct', 'data-qid' => $letter]);
       } else {
-        $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer]);
+        $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'data-qid' => $letter]);
       }
     }
     $output .= html_writer::end_div();
+    $output .= html_writer::start_div('button-container');
+    $output .= html_writer::tag('button', '<i class="fa fa-trash"></i>', ['class' => 'delete']);
+    $output .= html_writer::end_div();
+    $output .= html_writer::end_div();
   }
 
-  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Add to question bank']);
-  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Regenerate questions']);
-  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Cancel']);
+  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Add to question bank', 'class' => 'btn btn-primary', 'id' => 'addToQBank']);
+  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Regenerate questions', 'class' => 'btn btn-secondary']);
+  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Cancel', 'class' => 'btn btn-secondary']);
 
   echo $output;
+  $PAGE->requires->js_init_call('init');
 } else {
   $PAGE->set_heading($pagetitle);
   echo $OUTPUT->header();
+
+  $courseid = optional_param('id', 1, PARAM_INTEGER);
+  $mform->set_data(['courseid' => $courseid]);
   $mform->display();
 }
 
