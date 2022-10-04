@@ -23,6 +23,13 @@ const init = () => {
             window.location.href = `/question/edit.php?courseid=${data.data.courseid}`
         })
     })
+
+    document.querySelectorAll('.markCorrectButton').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.target.closest('.text-container').querySelector('.correct').classList.remove('correct')
+            e.target.parentElement.querySelector('input').classList.add('correct')
+        })
+    })
 }
 
 const buildQuestionObj = () => {
@@ -59,5 +66,5 @@ const removeQuestion = (elem) => {
             elem.remove()
         }, 400)
 
-    }, 400)
+    }, 150)
 }

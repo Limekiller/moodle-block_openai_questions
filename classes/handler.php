@@ -48,6 +48,7 @@ class handler {
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function fetch_response($prompt=null, $number_of_questions=3) {
+        var_dump($prompt ? $prompt : $this->get_qtype_prompt());
         $curlbody = [
             "prompt" => $prompt ? $prompt : $this->get_qtype_prompt(),
             "temperature" => 1,
@@ -66,7 +67,7 @@ class handler {
             ),
         ));
 
-        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-001/completions', json_encode($curlbody));
+        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-002/completions', json_encode($curlbody));
         $this->last_response .= "\n" . json_decode($response)->choices[0]->text;
         return $this->parse_response($response);
     }
@@ -80,8 +81,8 @@ class handler {
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function get_next_question_set($number_of_questions) {
-        $prompt = "The following information is followed by $number_of_questions $this->qtype questions:\n\n";
-        $prompt .= $this->sourcetext . "\n\n";
+        $prompt = "Text:\n\n";
+        $prompt .= $this->sourcetext . "\n\nQuestions ($number_of_questions):\n\n";
         $prompt .= $this->last_response . "\n";
         return $this->fetch_response($prompt, $number_of_questions);
     }
@@ -92,14 +93,14 @@ class handler {
      * @return string: The entire example prompt to pass to GPT-3
      */
     private function get_qtype_prompt() {
-        $prompt = "The following is a paragraph of information, followed by three $this->qtype questions:\n\nOn 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete.\n\n";
+        $prompt = "Text:\n\nOn 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete.\n\nQuestions (3):\n\n";
         $qtype_prompts = [
-            'shortanswer' => "Question 1: On what date did construction start?\nAnswer: 19 March 1882\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer: Francisco de Paula del Villar\n\nQuestion 3: How much of the project was completed when Gaudi died?\nAnswer: Less than a quarter\n\n-----\n\nThe following is another excerpt, again followed by three short answer questions:\n\n",
-            'truefalse' => "Question 1: Construction started on 19 March 1882\nAnswer: True\n\nQuestion 2: The original architect was Antoni Gaudi.\nAnswer: False\n\nQuestion 3: Over half of the basilica was finished when Gaudi died.\nAnswer: False\n\n-----\n\nThe following is another excerpt, again followed by three true/false questions:\n\n",
-            'multichoice' => "Question 1: On what date did construction start?\nAnswer A (correct): 1882\nAnswer B: 1893\nAnswer C: 1926\nAnswer D: 1918\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer A: Antoni Gaudi\nAnswer B: Francsico de Goya\nAnswer C (correct): Francisco de Paula del Villar\nAnswer D: Louis Sullivan\n\nQuestion 3: How much of the basilica was finished when Gaudi died?\nAnswer A: Over a third\nAnswer B: Nearly all of it\nAnswer C: Around half\nAnswer D (correct): Less than a quarter\n\n-----\n\nThe following is another excerpt, again followed by three multiple choice questions:\n\n"
+            'shortanswer' => "Question 1: On what date did construction start?\nAnswer: 19 March 1882\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer: Francisco de Paula del Villar\n\nQuestion 3: How much of the project was completed when Gaudi died?\nAnswer: Less than a quarter\n\n-----\n\nText:\n\n",
+            'truefalse' => "Question 1: Construction started on 19 March 1882\nAnswer: True\n\nQuestion 2: The original architect was Antoni Gaudi.\nAnswer: False\n\nQuestion 3: Over half of the basilica was finished when Gaudi died.\nAnswer: False\n\n-----\n\nText:\n\n",
+            'multichoice' => "Question 1: On what date did construction start?\nAnswer A (correct): 1882\nAnswer B: 1893\nAnswer C: 1926\nAnswer D: 1918\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer A: Antoni Gaudi\nAnswer B: Francsico de Goya\nAnswer C (correct): Francisco de Paula del Villar\nAnswer D: Louis Sullivan\n\nQuestion 3: How much of the basilica was finished when Gaudi died?\nAnswer A: Over a third\nAnswer B: Nearly all of it\nAnswer C: Around half\nAnswer D (correct): Less than a quarter\n\n-----\n\nText:\n\n"
         ];
 
-        return $prompt . $qtype_prompts[$this->qtype] . $this->sourcetext . "\n\n";
+        return $prompt . $qtype_prompts[$this->qtype] . $this->sourcetext . "\n\nQuestions (3):\n\n";
     }
 
     /**
@@ -121,6 +122,9 @@ class handler {
             $questions[$question_text] = ['answers' => []];
             unset($split_answers[0]);
 
+            if ($this->qtype == 'multichoice') {
+                $questions[$question_text]['correct'] = 'A';
+            }
             foreach ($split_answers as $index => $answer) {
                 if (strpos($answer, 'correct') !== false) {
                     $questions[$question_text]['correct'] = $letter_array[$index-1];

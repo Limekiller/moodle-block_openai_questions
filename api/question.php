@@ -71,7 +71,7 @@ foreach ($response->questions as $question => $question_data) {
     ];
     $form->defaultmark = 1;
     $form->penalty = 0;
-    $form->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_READY;
+    $form->status = 'ready';
 
     switch ($response->qtype) {
         case 'truefalse':
@@ -106,10 +106,6 @@ foreach ($response->questions as $question => $question_data) {
             $form->correctfeedback = ['text' => '', 'format' => '1'];
             $form->partiallycorrectfeedback = ['text' => '', 'format' => '1'];
             $form->incorrectfeedback = ['text' => '', 'format' => '1'];
-
-            if (!isset($quetion_data->correct)) {
-                $question_data->correct = 'A';
-            }
 
             foreach ($answer_array as $letter => $answer) {
                 array_push($form->answer, ['text' => $answer, 'format' => '1']);

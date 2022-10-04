@@ -7,6 +7,10 @@
     transition: all 0.2s ease;
 }
 
+.block_openai_questions-question .answer {
+    position: relative;
+}
+
 .block_openai_questions-question input, .block_openai_questions-question textarea {
     width: 100%;
     background: transparent;
@@ -23,6 +27,7 @@
     background: #dcdcdc;
     margin-bottom: 0.5rem;
     border-radius: 0.25rem;
+    transition: background 0.2s ease;
 }
 
 .block_openai_questions-question .delete {
@@ -41,3 +46,22 @@
 .block_openai_questions-question input.correct {
     background: #91e891;
 }
+
+.block_openai_questions-question .answer:hover .markCorrectButton {
+    pointer-events: all;
+    opacity: 1;
+}
+
+.block_openai_questions-question .markCorrectButton {
+    position: absolute;
+    right: 0.5rem;
+    top: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: green;
+    border: none;
+    border-radius: 0.25rem;
+    color: white;
+    font-size: 0.75rem;
+    opacity: 0;
+    pointer-events: none;
+  }

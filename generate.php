@@ -65,11 +65,19 @@ if ($mform->is_cancelled()) {
     $output .= html_writer::start_div('text-container');
     $output .= html_writer::tag('textarea', $question, ['class' => 'title']);
     foreach ($answer_array['answers'] as $letter => $answer) {
+      $output .= html_writer::start_div('answer');
+
+      if ($fromform->qtype == 'multichoice') {
+        $output .= html_writer::tag('button', 'Mark as correct', ['class' => 'markCorrectButton']);
+      }
+
       if (array_key_exists('correct', $answer_array) && $answer_array['correct'] == $letter) {
         $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'class' => 'correct', 'data-qid' => $letter]);
       } else {
         $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'data-qid' => $letter]);
       }
+      
+      $output .= html_writer::end_div();
     }
     $output .= html_writer::end_div();
     $output .= html_writer::start_div('button-container');
