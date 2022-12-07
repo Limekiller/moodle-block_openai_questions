@@ -33,13 +33,13 @@ class block_openai_questions extends block_base {
     function get_content() {
         global $PAGE;
 
-        if ($this->content !== null) {
-            return $this->content;
-        }
-
         $context = context_course::instance($this->page->course->id);
         if (!has_capability('moodle/course:manageactivities', $context)) {
             return;
+        }
+
+        if ($this->content !== null) {
+            return $this->content;
         }
 
         $this->content         =  new stdClass;

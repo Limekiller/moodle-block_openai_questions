@@ -48,7 +48,6 @@ class handler {
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function fetch_response($prompt=null, $number_of_questions=3) {
-        var_dump($prompt ? $prompt : $this->get_qtype_prompt());
         $curlbody = [
             "prompt" => $prompt ? $prompt : $this->get_qtype_prompt(),
             "temperature" => 1,
@@ -67,7 +66,7 @@ class handler {
             ),
         ));
 
-        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-002/completions', json_encode($curlbody));
+        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-003/completions', json_encode($curlbody));
         $this->last_response .= "\n" . json_decode($response)->choices[0]->text;
         return $this->parse_response($response);
     }
