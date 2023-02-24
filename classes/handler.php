@@ -48,7 +48,6 @@ class handler {
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function fetch_response($prompt=null, $number_of_questions=3) {
-        var_dump($prompt ? $prompt : $this->get_qtype_prompt());
         $curlbody = [
             "prompt" => $prompt ? $prompt : $this->get_qtype_prompt(),
             "temperature" => 1,
@@ -67,7 +66,7 @@ class handler {
             ),
         ));
 
-        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-002/completions', json_encode($curlbody));
+        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-003/completions', json_encode($curlbody));
         $this->last_response .= "\n" . json_decode($response)->choices[0]->text;
         return $this->parse_response($response);
     }
@@ -82,7 +81,7 @@ class handler {
      */
     public function get_next_question_set($number_of_questions) {
         $prompt = "Text:\n\n";
-        $prompt .= $this->sourcetext . "\n\nQuestions ($number_of_questions):\n\n";
+        $prompt .= $this->sourcetext . "\n\nList of $this->qtype Questions ($number_of_questions):\n\n";
         $prompt .= $this->last_response . "\n";
         return $this->fetch_response($prompt, $number_of_questions);
     }
@@ -93,7 +92,7 @@ class handler {
      * @return string: The entire example prompt to pass to GPT-3
      */
     private function get_qtype_prompt() {
-        $prompt = "Text:\n\nOn 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete.\n\nQuestions (3):\n\n";
+        $prompt = "Text:\n\nOn 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete.\n\nList of $this->qtype Questions (3):\n\n";
         $qtype_prompts = [
             'shortanswer' => "Question 1: On what date did construction start?\nAnswer: 19 March 1882\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer: Francisco de Paula del Villar\n\nQuestion 3: How much of the project was completed when Gaudi died?\nAnswer: Less than a quarter\n\n-----\n\nText:\n\n",
             'truefalse' => "Question 1: Construction started on 19 March 1882\nAnswer: True\n\nQuestion 2: The original architect was Antoni Gaudi.\nAnswer: False\n\nQuestion 3: Over half of the basilica was finished when Gaudi died.\nAnswer: False\n\n-----\n\nText:\n\n",

@@ -43,12 +43,19 @@ if (!has_capability('moodle/course:manageactivities', $course_context)) {
 // Figure out the ID of the "top" category for this course
 $sql = "SELECT id from {question_categories} WHERE contextid = ?";
 $top_category_id_for_course = $DB->get_records_sql($sql, [$course_context->id]);
-$top_category_id_for_course = reset($top_category_id_for_course)->id;
+$category_id = reset($top_category_id_for_course)->id;
 
-// Then get the first listed category in the database with the "top" as the parent
-$sql = "SELECT id from {question_categories} WHERE parent = ?";
-$category_id = $DB->get_records_sql($sql, [$top_category_id_for_course]);
-$category_id = reset($category_id)->id;
+// // Then get the first listed category in the database with the "top" as the parent
+// $sql = "SELECT id from {question_categories} WHERE parent = ?";
+// $category_id = $DB->get_records_sql($sql, [$top_category_id_for_course]);
+// $category_id = reset($category_id);
+
+// // If no such category exists, use the top category
+// if (!$category_id) {
+//     $category_id = $top_category_id_for_course;
+// } else {
+//     $category_id
+// }
 
 foreach ($response->questions as $question => $question_data) {
     $answer_array = $question_data->answers;
