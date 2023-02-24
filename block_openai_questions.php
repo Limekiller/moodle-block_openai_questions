@@ -26,11 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 class block_openai_questions extends block_base {
 
-    function init() {
+    public function init() {
         $this->title = get_string('openai_questions', 'block_openai_questions');
     }
 
-    function get_content() {
+    public function get_content() {
         global $PAGE;
 
         if ($this->content !== null) {
@@ -48,5 +48,9 @@ class block_openai_questions extends block_base {
         return $this->content;
     }
 
-    function has_config() {return true;}
+    public function has_config() {return true;}
+
+    public function applicable_formats() {
+        return array('course-view' => true);
+    }
 }
