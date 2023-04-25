@@ -32,9 +32,6 @@ class handler {
     private $qtype;
     private $apikey;
 
-    private $last_response = '';
-    private $questions;
-
     function __construct($sourcetext, $qtype) {
         $this->sourcetext = $sourcetext;
         $this->qtype = $qtype;
@@ -42,20 +39,95 @@ class handler {
     }
 
     /**
-     * Fetch a GPT-3 generation from a prompt
+     * Fetch a GPT generation from a prompt
      * 
      * @param int prompt (optional): The prompt to pass to OpenAI
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
-    public function fetch_response($prompt=null, $number_of_questions=3) {
+    public function fetch_response($number_of_questions=3) {
+        $messages = $this->build_messages();
+        array_push($messages, ["role" => "user", "content" => '{"number_of_questions": ' . $number_of_questions . ',  "text": "' . $this->sourcetext . '"}']);
+
+        $response = $this->make_api_request($messages);
+        if (property_exists($response, 'error')) {
+            throw new \moodle_exception("openai_error", "block_openai_questions", "", $response->error->message);
+        }
+
+        $completion = json_decode($response->choices[0]->message->content, true);
+        if (!$completion) {
+            $completion = $this->attempt_json_conversion($response->choices[0]->message->content);
+        }
+
+        return $completion;
+    }
+
+    /**
+     * The first response to GPT-3 starts with an example so the AI knows what the questions should look like.
+     * This function gets the right example based on the passed question type.
+     * @return string: The entire example prompt to pass to GPT-3
+     */
+    private function build_messages() {
+        $qtype_prompts = [
+            'shortanswer' => '[{"question": "On what date did construction start?", "answers": {"A": "19 March 1882"}}, {"question": "Who was the original architect of the basilica?", "answers": {"A": "Francisco de Paula del Villar"}}, {"question": "How much of the project was completed when Gaudi died?", "answers": {"A": "Less than a quarter"}}]',
+            'truefalse' => '[{"question": "Construction started on 19 March 1882", "answers": {"A": "True"}}, {"question": "The original architect was Antoni Gaudi", "answers": {"A": "False"}}, {"question": "Over half of the basilica was finished when Gaudi died.", "answers": {"A": "False"}}]',
+            'multichoice' => '[{"question": "On what date did construction start?", "answers": {"A": "1882", "B": "1893", "C": "1926", "D": "1918"}, "correct": "A"}, {"question": "Who was the original architect of the basilica?", "answers": {"A": "Antoni Gaudi", "B": "Francsico de Goya", "C": "Francisco de Paula del Villar", "D": "Louis Sullivan"}, "correct": "C"}, {"question": "How much of the basilica was finished when Gaudi died?", "answers": {"A": "Over a third", "B": "Nearly all of it", "C": "Around half", "D": "Less than a quarter"}, "correct": "D"}]'
+        ];
+        $example_string = '{
+            "text": ,
+            "questions": [' . $this->qtype . ']
+        }'; 
+
+        $messages = [
+            ["role" => "system", "content" => "Generate $this->qtype questions from text in JSON format. Do not return normal text, just JSON. For example, the following is an example of the input JSON:"],
+            [
+                "role" => "system", 
+                "content" => '{"number_of_questions": 3, "text": "On 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete."}',
+            ],
+            ["role" => "system", "content" => "Here is an example of the output JSON containing the $this->qtype questions. The response MUST follow this structure:"],
+            ["role" => "system", "content" => $qtype_prompts[$this->qtype]]
+        ];
+
+        if ($this->qtype === "truefalse") {
+            array_push($messages, ["role" => "system", "content" => "The answers given MUST either be the string 'True' or the string 'False'."]);
+        }
+
+        return $messages;
+    }
+
+    /**
+     * If GPT fails to provide parseable JSON, we run it through one more prompt to try to massage the data into something we can use
+     * @param string responsetext: The text to convert into JSON
+     * @return string: The JSON string
+     */
+    private function attempt_json_conversion($responsetext) {
+        $messages = [
+            ["role" => "system", "content" => "Please convert any given input into valid JSON. Do not return anything else except properly formatted JSON based on the input."],
+            ["role" => "user", "content" => $responsetext]
+        ];
+
+        $response = $this->make_api_request($messages);
+
+        $completion = json_decode($response->choices[0]->message->content, true);
+        if (!$completion) {
+            throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", "GPT failed to return questions in the correct format. Sorry, there's nothing you can do about this except try generating the questions again. You can refresh this page to re-attempt question generation.\n\nHere's the response received from GPT:\n\"" . $response->choices[0]->message->content . '"');
+        }
+
+        return $completion;
+    }
+
+    /**
+     * Helper method for making API requests
+     * @param Array messages: The list of messages to send to OpenAI
+     * @return Array: The parsed JSON response
+     */
+    private function make_api_request($messages) {
         $curlbody = [
-            "prompt" => $prompt ? $prompt : $this->get_qtype_prompt(),
+            "model" => "gpt-3.5-turbo-0301",
+            "messages" => $messages,
             "temperature" => 1,
-            "max_tokens" => 1000,
             "top_p" => 1,
             "frequency_penalty" => 0.25,
             "presence_penalty" => 0,
-            "stop" => ['Answer ' . ($number_of_questions + 1) . ':']
         ];
         
         $curl = new \curl();
@@ -66,76 +138,9 @@ class handler {
             ),
         ));
 
-        $response = $curl->post('https://api.openai.com/v1/engines/text-davinci-003/completions', json_encode($curlbody));
-        $this->last_response .= "\n" . json_decode($response)->choices[0]->text;
-        return $this->parse_response($response);
-    }
-
-    /**
-     * The first time questions are generated, an example paragraph and questions are passed so GPT-3 knows the format to use.
-     * However, only a few questions can be generated this way. So we can call this function to request more questions from GPT-3,
-     * this time using the user-submitted paragraph and the three originally-generated questions as the example
-     * 
-     * @param int number_of_questions: The number of questions to tell GPT-3 to generate (won't necessarily work though)
-     * @return Array: An array of questions parsed from the GPT-3 generation
-     */
-    public function get_next_question_set($number_of_questions) {
-        $prompt = "Text:\n\n";
-        $prompt .= $this->sourcetext . "\n\nList of $this->qtype Questions ($number_of_questions):\n\n";
-        $prompt .= $this->last_response . "\n";
-        return $this->fetch_response($prompt, $number_of_questions);
-    }
-
-    /**
-     * The first response to GPT-3 starts with an example so the AI knows what the questions should look like.
-     * This function gets the right example based on the passed question type.
-     * @return string: The entire example prompt to pass to GPT-3
-     */
-    private function get_qtype_prompt() {
-        $prompt = "Text:\n\nOn 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete.\n\nList of $this->qtype Questions (3):\n\n";
-        $qtype_prompts = [
-            'shortanswer' => "Question 1: On what date did construction start?\nAnswer: 19 March 1882\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer: Francisco de Paula del Villar\n\nQuestion 3: How much of the project was completed when Gaudi died?\nAnswer: Less than a quarter\n\n-----\n\nText:\n\n",
-            'truefalse' => "Question 1: Construction started on 19 March 1882\nAnswer: True\n\nQuestion 2: The original architect was Antoni Gaudi.\nAnswer: False\n\nQuestion 3: Over half of the basilica was finished when Gaudi died.\nAnswer: False\n\n-----\n\nText:\n\n",
-            'multichoice' => "Question 1: On what date did construction start?\nAnswer A (correct): 1882\nAnswer B: 1893\nAnswer C: 1926\nAnswer D: 1918\n\nQuestion 2: Who was the original architect of the basilica?\nAnswer A: Antoni Gaudi\nAnswer B: Francsico de Goya\nAnswer C (correct): Francisco de Paula del Villar\nAnswer D: Louis Sullivan\n\nQuestion 3: How much of the basilica was finished when Gaudi died?\nAnswer A: Over a third\nAnswer B: Nearly all of it\nAnswer C: Around half\nAnswer D (correct): Less than a quarter\n\n-----\n\nText:\n\n"
-        ];
-
-        return $prompt . $qtype_prompts[$this->qtype] . $this->sourcetext . "\n\nQuestions (3):\n\n";
-    }
-
-    /**
-     * Given a response from GPT-3, try to parse it into a structured array of questions and answers
-     * @param JSON generation: The JSON response from GPT-3
-     * @return Array: The structured array of questions
-     */
-    private function parse_response($generation) {
-        $questions_obj = json_decode($generation);
-        $split_questions = explode('Question', $questions_obj->choices[0]->text);
-        unset($split_questions[0]);
-
-        $questions = $this->questions ? $this->questions : [];
-        $letter_array = ['A', 'B', 'C', 'D'];
-
-        foreach ($split_questions as $question) {
-            $split_answers = explode('Answer', $question);
-            $question_text = str_replace('\n', '', trim(explode(':', $split_answers[0])[1]));
-            $questions[$question_text] = ['answers' => []];
-            unset($split_answers[0]);
-
-            if ($this->qtype == 'multichoice') {
-                $questions[$question_text]['correct'] = 'A';
-            }
-            foreach ($split_answers as $index => $answer) {
-                if (strpos($answer, 'correct') !== false) {
-                    $questions[$question_text]['correct'] = $letter_array[$index-1];
-                }
-
-                $questions[$question_text]['answers'][$letter_array[$index-1]] = 
-                    explode(':', str_replace('\n', '', $answer))[1];
-            }
-        }
-
-        $this->questions = $questions;
-        return($questions);
+        $response = $curl->post('https://api.openai.com/v1/chat/completions', json_encode($curlbody));
+        $response = json_decode($response);
+        return $response;
     }
 
 }

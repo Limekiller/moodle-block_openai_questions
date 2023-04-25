@@ -32,6 +32,7 @@ $string['apikeylabel'] = 'The API key provided by OpenAI';
 $string['sourcetext'] = 'Source text';
 $string['qtype'] = 'Question type';
 $string['numquestions'] = 'Number of questions to generate';
-$string['notanumber'] = 'Value must be a number that is greater than 0';
+$string['notanumber'] = 'Value must be a number that is between 1 and 20';
+$string['sourcetextcharlength'] = 'Number of characters must be between 100 and 10,000';
 
 $string['editquestions'] = 'Edit Questions';

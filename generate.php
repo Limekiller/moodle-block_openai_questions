@@ -25,10 +25,12 @@
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/forms/generate.php');
 use block_openai_questions\handler;
-use block_openai_questions\output\question_page;
 
 $pagetitle = get_string('openai_questions', 'block_openai_questions');
 $courseid = optional_param('id', 1, PARAM_INTEGER);
+if ($courseid !== 1) {
+  $_SESSION["openai_questions_course"] = $courseid;
+}
 
 require_login();
 if (!has_capability('block/openai_questions:addinstance', context_course::instance($courseid))) {
@@ -40,58 +42,55 @@ $PAGE->set_context(context_system::instance());
 
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($pagetitle);
-$PAGE->set_url($CFG->wwwroot . '/blocks/openai_questions/generate.php');
+$PAGE->set_url($CFG->wwwroot . "/blocks/openai_questions/generate.php");
 
 $mform = new generate_form();
 
 if ($mform->is_cancelled()) {
-  var_dump(':/');
-  die();
+  redirect($CFG->wwwroot . "/course/view.php?id=" . $_SESSION["openai_questions_course"]);
 } else if ($fromform = $mform->get_data()) {
   $PAGE->requires->js('/blocks/openai_questions/lib.js');
   $PAGE->set_heading(get_string('editquestions', 'block_openai_questions'));
   echo $OUTPUT->header();
 
   $handler = new handler($fromform->sourcetext, $fromform->qtype);
-  $questions = [];
-  $questions = $handler->fetch_response(); // Initial prompt with example question and answers generates three questions
-  $questions = $handler->get_next_question_set($fromform->number_of_questions); // Now feed the user-submitted text and generated questions back in to try to get more
+  $questions = $handler->fetch_response($fromform->number_of_questions);
 
   $output = html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->courseid, 'id' => 'courseid']);
   $output .= html_writer::tag('input', '', ['type' => 'hidden', 'value' => $fromform->qtype, 'id' => 'qtype']);
 
-  foreach ($questions as $question => $answer_array) {
+  foreach ($questions as $question_data) {
     $output .= html_writer::start_div('block_openai_questions-question');
-    $output .= html_writer::start_div('text-container');
-    $output .= html_writer::tag('textarea', $question, ['class' => 'title']);
-    foreach ($answer_array['answers'] as $letter => $answer) {
-      $output .= html_writer::start_div('answer');
 
-      if ($fromform->qtype == 'multichoice') {
-        $output .= html_writer::tag('button', 'Mark as correct', ['class' => 'markCorrectButton']);
-      }
+      $output .= html_writer::start_div('block_openai_questions-text-container');
+        $output .= html_writer::tag('textarea', $question_data["question"], ['class' => 'block_openai_questions-title']);
+        foreach ($question_data['answers'] as $letter => $answer) {
+          $output .= html_writer::start_div('block_openai_questions-answer');
+            if ($fromform->qtype == 'multichoice') {
+              $output .= html_writer::tag('button', 'Mark as correct', ['class' => 'block_openai_questions-markCorrectButton']);
+            }
 
-      if (array_key_exists('correct', $answer_array) && $answer_array['correct'] == $letter) {
-        $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'class' => 'correct', 'data-qid' => $letter]);
-      } else {
-        $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'data-qid' => $letter]);
-      }
-      
+            if (array_key_exists('correct', $question_data) && $question_data['correct'] == $letter) {
+              $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'class' => 'block_openai_questions-correct', 'data-qid' => $letter]);
+            } else {
+              $output .= html_writer::tag('input', '', ['type' => 'text', 'value' => $answer, 'data-qid' => $letter]);
+            }
+          $output .= html_writer::end_div();
+        }
       $output .= html_writer::end_div();
-    }
-    $output .= html_writer::end_div();
-    $output .= html_writer::start_div('button-container');
-    $output .= html_writer::tag('button', '<i class="fa fa-trash"></i>', ['class' => 'delete']);
-    $output .= html_writer::end_div();
+
+      $output .= html_writer::start_div('block_openai_questions-button-container');
+        $output .= html_writer::tag('button', '<i class="fa fa-trash"></i>', ['class' => 'block_openai_questions-delete']);
+      $output .= html_writer::end_div();
+
     $output .= html_writer::end_div();
   }
 
-  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Add to question bank', 'class' => 'btn btn-primary', 'id' => 'addToQBank']);
-  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Regenerate questions', 'class' => 'btn btn-secondary']);
+  $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => 'Add to question bank', 'class' => 'btn btn-primary block_openai_questions-addToQBank', 'id' => 'addToQBank']);
   $output .= html_writer::tag('a', '<input type="submit" class="btn btn-secondary" value="Cancel"/>', ['href' => "/course/view.php?id=$fromform->courseid"]);
 
   echo $output;
-  $PAGE->requires->js_init_call('init');
+  $PAGE->requires->js_init_call('init', [$_SESSION['openai_questions_course']]);
 } else {
   $PAGE->set_heading($pagetitle);
   echo $OUTPUT->header();

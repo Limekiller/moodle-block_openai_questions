@@ -41,21 +41,17 @@ if (!has_capability('moodle/course:manageactivities', $course_context)) {
 }
 
 // Figure out the ID of the "top" category for this course
-$sql = "SELECT id from {question_categories} WHERE contextid = ?";
+$sql = "SELECT id, name FROM {question_categories} WHERE contextid = ? ORDER BY id";
 $top_category_id_for_course = $DB->get_records_sql($sql, [$course_context->id]);
 $category_id = reset($top_category_id_for_course)->id;
 
-// // Then get the first listed category in the database with the "top" as the parent
-// $sql = "SELECT id from {question_categories} WHERE parent = ?";
-// $category_id = $DB->get_records_sql($sql, [$top_category_id_for_course]);
-// $category_id = reset($category_id);
-
-// // If no such category exists, use the top category
-// if (!$category_id) {
-//     $category_id = $top_category_id_for_course;
-// } else {
-//     $category_id
-// }
+// If we can find a default category, use that instead (but this doesn't always exist)
+foreach ($top_category_id_for_course as $category) {
+    if (strpos($category->name, "Default") !== false) {
+        $category_id = $category->id;
+        break;
+    }
+}
 
 foreach ($response->questions as $question => $question_data) {
     $answer_array = $question_data->answers;
@@ -82,7 +78,7 @@ foreach ($response->questions as $question => $question_data) {
 
     switch ($response->qtype) {
         case 'truefalse':
-            $form->correctanswer = $answer_array->A == 'True' ? 1 : 0;
+            $form->correctanswer = strtolower($answer_array->A) == 'true' ? 1 : 0;
         
             $form->feedbacktrue = array();
             $form->feedbacktrue['format'] = '1';

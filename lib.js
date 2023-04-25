@@ -1,33 +1,31 @@
-const init = () => {
-    document.querySelectorAll('.block_openai_questions-question .delete').forEach(button => {
+const init = (Y, courseid) => {
+    document.querySelectorAll('.block_openai_questions-question .block_openai_questions-delete').forEach(button => {
         button.addEventListener('click', e => {
             removeQuestion(e.target.closest('.block_openai_questions-question'))
         })
     })
 
-    document.querySelector('#addToQBank').addEventListener('click', e => {
+    document.querySelector('#addToQBank').addEventListener('click', async e => {
         e.target.style.opacity = '0.5'
         e.target.value = "Please wait..."
         e.target.style.pointerEvents = 'none'
         
         const questions = buildQuestionObj()
-        fetch('/blocks/openai_questions/api/question.php', {
+        await fetch('/blocks/openai_questions/api/question.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(questions)
         })
-        .then(response => response.json())
-        .then(data => {
-            window.location.href = `/question/edit.php?courseid=${data.data.courseid}`
-        })
+
+        window.location.href = `/question/edit.php?courseid=${courseid}`
     })
 
-    document.querySelectorAll('.markCorrectButton').forEach(button => {
+    document.querySelectorAll('.block_openai_questions-markCorrectButton').forEach(button => {
         button.addEventListener('click', (e) => {
-            e.target.closest('.text-container').querySelector('.correct').classList.remove('correct')
-            e.target.parentElement.querySelector('input').classList.add('correct')
+            e.target.closest('.block_openai_questions-text-container').querySelector('.block_openai_questions-correct').classList.remove('block_openai_questions-correct')
+            e.target.parentElement.querySelector('input').classList.add('block_openai_questions-correct')
         })
     })
 }
@@ -38,7 +36,7 @@ const buildQuestionObj = () => {
         let answers = {}
         let correct = 'A';
         questionElem.querySelectorAll('input').forEach(answer => {
-            if (answer.classList.contains('correct')) {
+            if (answer.classList.contains('block_openai_questions-correct')) {
                 correct = answer.dataset.qid
             }
             answers[answer.dataset.qid] = answer.value.trim()

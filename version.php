@@ -24,6 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2022100600;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->version   = 2023042500;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2020061500;        // Requires this Moodle version
 $plugin->component = 'block_openai_questions'; // Full name of the plugin (used for diagnostics)
