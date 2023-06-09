@@ -41,7 +41,7 @@ class handler {
     /**
      * Fetch a GPT generation from a prompt
      * 
-     * @param int prompt (optional): The prompt to pass to OpenAI
+     * @param int number_of_questions (optional): The number of questions to try to generate
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function fetch_response($number_of_questions=3) {
@@ -72,10 +72,6 @@ class handler {
             'truefalse' => '[{"question": "Construction started on 19 March 1882", "answers": {"A": "True"}}, {"question": "The original architect was Antoni Gaudi", "answers": {"A": "False"}}, {"question": "Over half of the basilica was finished when Gaudi died.", "answers": {"A": "False"}}]',
             'multichoice' => '[{"question": "On what date did construction start?", "answers": {"A": "1882", "B": "1893", "C": "1926", "D": "1918"}, "correct": "A"}, {"question": "Who was the original architect of the basilica?", "answers": {"A": "Antoni Gaudi", "B": "Francsico de Goya", "C": "Francisco de Paula del Villar", "D": "Louis Sullivan"}, "correct": "C"}, {"question": "How much of the basilica was finished when Gaudi died?", "answers": {"A": "Over a third", "B": "Nearly all of it", "C": "Around half", "D": "Less than a quarter"}, "correct": "D"}]'
         ];
-        $example_string = '{
-            "text": ,
-            "questions": [' . $this->qtype . ']
-        }'; 
 
         $messages = [
             ["role" => "system", "content" => "Generate $this->qtype questions from text in JSON format. Do not return normal text, just JSON. For example, the following is an example of the input JSON:"],

@@ -33,8 +33,8 @@ if ($courseid !== 1) {
 }
 
 require_login();
-if (!has_capability('block/openai_questions:addinstance', context_course::instance($courseid))) {
-  throw new moodle_exception('Sorry dawg');
+if (!has_capability('moodle/course:manageactivities', context_course::instance($courseid))) {
+  throw new \moodle_exception("capability_error", "block_openai_questions", "", 'Sorry, you don\'t have permission to generate questions in this course.');
 }
 
 $PAGE->set_context(context_system::instance());
@@ -47,8 +47,11 @@ $PAGE->set_url($CFG->wwwroot . "/blocks/openai_questions/generate.php");
 $mform = new generate_form();
 
 if ($mform->is_cancelled()) {
+
   redirect($CFG->wwwroot . "/course/view.php?id=" . $_SESSION["openai_questions_course"]);
+  
 } else if ($fromform = $mform->get_data()) {
+
   $PAGE->requires->js('/blocks/openai_questions/lib.js');
   $PAGE->set_heading(get_string('editquestions', 'block_openai_questions'));
   echo $OUTPUT->header();
@@ -91,11 +94,14 @@ if ($mform->is_cancelled()) {
 
   echo $output;
   $PAGE->requires->js_init_call('init', [$_SESSION['openai_questions_course']]);
+
 } else {
+
   $PAGE->set_heading($pagetitle);
   echo $OUTPUT->header();
   $mform->set_data(['courseid' => $courseid]);
   $mform->display();
+
 }
 
 echo $OUTPUT->footer();
