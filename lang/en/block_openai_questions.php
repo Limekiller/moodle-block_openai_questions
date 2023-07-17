@@ -24,6 +24,7 @@
 $string['pluginname'] = 'OpenAI Question Generator';
 $string['openai_questions'] = 'Question Generator';
 $string['openai_questions:addinstance'] = 'Add a new Question Generator block';
+$string['privacy:metadata'] = 'The OpenAI Questions block, by default, neither stores personal user data nor sends it to OpenAI. However, text submitted by teachers in order to generate questions is sent in its entirety to OpenAI, and is then subject to OpenAI\'s privacy policy (https://openai.com/api/policies/privacy/), which may store messages in order to improve the API. Additionally, this text is then used to generate questions that may be saved to the site.';
 
 $string['manage'] = 'OpenAI Question Generator Settings';
 $string['apikey'] = 'OpenAI API Key';
