@@ -17,7 +17,7 @@
  * Question generation form
  *
  * @package    block_openai_questions
- * @copyright  2022 Bryce Yoder (me@bryceyoder.com)
+ * @copyright  2023 Bryce Yoder (me@bryceyoder.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -52,7 +52,7 @@ class generate_form extends moodleform {
             $errors['number_of_questions'] = get_string('notanumber', 'block_openai_questions');
         }
 
-        if (strlen($data['sourcetext']) < 100 || strlen($data['sourcetext']) > 10000) {
+        if (strlen($data['sourcetext']) < 100 || strlen($data['sourcetext']) > 64000) {
             $errors['sourcetext'] = get_string('sourcetextcharlength', 'block_openai_questions');
         }
 

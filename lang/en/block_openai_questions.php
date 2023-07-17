@@ -29,11 +29,13 @@ $string['privacy:metadata'] = 'The OpenAI Questions block, by default, neither s
 $string['manage'] = 'OpenAI Question Generator Settings';
 $string['apikey'] = 'OpenAI API Key';
 $string['apikeylabel'] = 'The API key provided by OpenAI';
+$string['model'] = 'Model';
+$string['modellabel'] = 'The model to use in order to generate questions';
 
 $string['sourcetext'] = 'Source text';
 $string['qtype'] = 'Question type';
 $string['numquestions'] = 'Number of questions to generate';
 $string['notanumber'] = 'Value must be a number that is between 1 and 20';
-$string['sourcetextcharlength'] = 'Number of characters must be between 100 and 10,000';
+$string['sourcetextcharlength'] = 'Number of characters must be between 100 and 64,000';
 
 $string['editquestions'] = 'Edit Questions';

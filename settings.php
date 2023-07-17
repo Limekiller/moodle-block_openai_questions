@@ -30,3 +30,15 @@ $settings->add(new admin_setting_configtext(
     get_string('apikey', 'block_openai_questions'),
     ''
 ));
+
+$settings->add(new admin_setting_configselect(
+    'block_openai_questions/model',
+    get_string('model', 'block_openai_questions'),
+    get_string('modellabel', 'block_openai_questions'),
+    'gpt-3.5-turbo-16k',
+    [
+        'gpt-4' => 'gpt-4',
+        'gpt-3.5-turbo' => 'gpt-3.5-turbo',
+        'gpt-3.5-turbo-16k' => 'gpt-3.5-turbo-16k'
+    ]
+));

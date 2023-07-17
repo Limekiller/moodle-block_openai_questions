@@ -20,7 +20,7 @@ namespace block_openai_questions;
  * Class for handling question generation
  *
  * @package     block_openai_questions
- * @copyright   2022 Bryce Yoder (me@bryceyoder.com)
+ * @copyright   2023 Bryce Yoder (me@bryceyoder.com)
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -50,12 +50,19 @@ class handler {
 
         $response = $this->make_api_request($messages);
         if (property_exists($response, 'error')) {
+            echo $response->error->message;
             throw new \moodle_exception("openai_error", "block_openai_questions", "", $response->error->message);
         }
 
         $completion = json_decode($response->choices[0]->message->content, true);
         if (!$completion) {
             $completion = $this->attempt_json_conversion($response->choices[0]->message->content);
+        }
+
+        // This is why I'm not bullish on LLMs in general. It never does EXACTLY what you want. Half the time, it will return the questions
+        // in a "questions" array, which isn't what I asked for. Let's check if that's the case and fix that if it is.
+        if ($completion['questions']) {
+            $completion = $completion['questions'];
         }
 
         return $completion;
@@ -105,7 +112,9 @@ class handler {
 
         $completion = json_decode($response->choices[0]->message->content, true);
         if (!$completion) {
-            throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", "GPT failed to return questions in the correct format. Sorry, there's nothing you can do about this except try generating the questions again. You can refresh this page to re-attempt question generation.\n\nHere's the response received from GPT:\n\"" . $response->choices[0]->message->content . '"');
+            $error_string = "GPT failed to return questions in the correct format. Sorry, there's nothing you can do about this except try generating the questions again. You can refresh this page to re-attempt question generation.\n\nHere's the response received from GPT:\n\"" . $response->choices[0]->message->content . '"';
+            echo $error_string;
+            throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", $error_string);
         }
 
         return $completion;
@@ -117,8 +126,10 @@ class handler {
      * @return Array: The parsed JSON response
      */
     private function make_api_request($messages) {
+        $model = get_config('block_openai_questions', 'model');
+
         $curlbody = [
-            "model" => "gpt-3.5-turbo-0301",
+            "model" => $model,
             "messages" => $messages,
             "temperature" => 1,
             "top_p" => 1,
