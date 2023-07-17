@@ -43,7 +43,10 @@ class block_openai_questions extends block_base {
         }
 
         $this->content         =  new stdClass;
-        $this->content->text   = '<a href="/blocks/openai_questions/generate.php?id=' . $this->page->course->id . '"><button class="btn btn-primary">Generate Questions</button></a>';
+        $this->content->text   = '<a href="/blocks/openai_questions/generate.php?id=' . 
+            $this->page->course->id . '"><button class="btn btn-primary">' . 
+            get_string('generatequestions', 'block_openai_questions') . 
+        '</button></a>';
 
         return $this->content;
     }

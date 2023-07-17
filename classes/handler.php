@@ -112,7 +112,7 @@ class handler {
 
         $completion = json_decode($response->choices[0]->message->content, true);
         if (!$completion) {
-            $error_string = "GPT failed to return questions in the correct format. Sorry, there's nothing you can do about this except try generating the questions again. You can refresh this page to re-attempt question generation.\n\nHere's the response received from GPT:\n\"" . $response->choices[0]->message->content . '"';
+            $error_string = get_string('error_gpt_format', 'block_openai_questions') . $response->choices[0]->message->content . '"';
             echo $error_string;
             throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", $error_string);
         }
