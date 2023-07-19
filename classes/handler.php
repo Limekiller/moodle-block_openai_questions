@@ -57,6 +57,9 @@ class handler {
         $completion = json_decode($response->choices[0]->message->content, true);
         if (!$completion) {
             $completion = $this->attempt_json_conversion($response->choices[0]->message->content);
+        } elseif (array_key_exists("error", $completion) || array_key_exists("message", $completion)) {
+            echo get_string('error_gpt_format', 'block_openai_questions');
+            throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", get_string('error_gpt_format', 'block_openai_questions') . $response->choices[0]->message->content . '"');
         }
 
         // This is why I'm not bullish on LLMs in general. It never does EXACTLY what you want. Half the time, it will return the questions
@@ -65,7 +68,7 @@ class handler {
             $completion = $completion['questions'];
         }
 
-        return $completion;
+        return $this->validate_response($completion);
     }
 
     /**
@@ -104,7 +107,7 @@ class handler {
      */
     private function attempt_json_conversion($responsetext) {
         $messages = [
-            ["role" => "system", "content" => "Please convert any given input into valid JSON. Do not return anything else except properly formatted JSON based on the input."],
+            ["role" => "system", "content" => "Please convert any given input (including plain text) into valid JSON. The input does not need to be JSON format. Do not return anything else except properly formatted JSON based on the input."],
             ["role" => "user", "content" => $responsetext]
         ];
 
@@ -112,9 +115,8 @@ class handler {
 
         $completion = json_decode($response->choices[0]->message->content, true);
         if (!$completion) {
-            $error_string = get_string('error_gpt_format', 'block_openai_questions') . $response->choices[0]->message->content . '"';
-            echo $error_string;
-            throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", $error_string);
+            echo get_string('error_gpt_format', 'block_openai_questions');
+            throw new \moodle_exception("gpt_format_error", "block_openai_questions", "", get_string('error_gpt_format', 'block_openai_questions') . $response->choices[0]->message->content . '"');
         }
 
         return $completion;
@@ -148,6 +150,28 @@ class handler {
         $response = $curl->post('https://api.openai.com/v1/chat/completions', json_encode($curlbody));
         $response = json_decode($response);
         return $response;
+    }
+    
+    /**
+     * Given an array of generated questions, go through them and remove any that don't have question text
+     * or have an answer missing text
+     * @param Array questions: The array of generated questions
+     * @return Array: The validated array of questions
+     */
+    function validate_response($questions) {
+        foreach ($questions as $index => $question) {
+            if (!$question['question']) {
+                unset($questions[$index]);
+                continue;
+            }   
+            foreach ($question['answers'] as $choice => $text) {
+                if (!$text) {
+                    unset($questions[$index]);
+                }
+            }
+        }
+    
+        return $questions;
     }
 
 }

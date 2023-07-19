@@ -46,4 +46,5 @@ $string['addtoqbank'] = "Add to question bank";
 $string['cancel'] = "Cancel";
 
 $string['error_capability'] = 'Sorry, you don\'t have permission to generate questions in this course.';
-$string['error_gpt_format'] = "GPT failed to return questions in the correct format. Sorry, there's nothing you can do about this except try generating the questions again. You can refresh this page to re-attempt question generation.\n\nHere's the response received from GPT:\n\"";
+$string['error_gpt_format'] = "GPT failed to return questions in the correct format. Sorry, there's nothing you can do about this except try generating the questions again. You can refresh this page to re-attempt question generation.";
+$string['herestheresponse'] = "\n\nHere's the response received from GPT:\n\"";
