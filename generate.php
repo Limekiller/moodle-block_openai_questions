@@ -26,21 +26,22 @@ require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/forms/generate.php');
 use block_openai_questions\handler;
 
-$pagetitle = get_string('openai_questions', 'block_openai_questions');
 $courseid = optional_param('id', 1, PARAM_INTEGER);
 if ($courseid !== 1) {
   $_SESSION["openai_questions_course"] = $courseid;
 }
 
 require_login();
-if (!has_capability('moodle/course:manageactivities', context_course::instance($courseid))) {
+if (!has_capability('moodle/course:manageactivities', context_course::instance($_SESSION["openai_questions_course"]))) {
   throw new \moodle_exception("capability_error", "block_openai_questions", "", get_string('error_capability', 'block_openai_questions'));
 }
 
-$PAGE->set_context(context_system::instance());
-// $PAGE->set_context(context_course::instance($courseid));
+$course = $DB->get_record('course', array('id' => $_SESSION["openai_questions_course"]), '*', MUST_EXIST);
+$PAGE->set_context(context_course::instance($_SESSION["openai_questions_course"]));
+$PAGE->set_course($course);
 
 $PAGE->set_pagelayout('standard');
+$pagetitle = get_string('openai_questions', 'block_openai_questions');
 $PAGE->set_title($pagetitle);
 $PAGE->set_url($CFG->wwwroot . "/blocks/openai_questions/generate.php");
 
