@@ -24,34 +24,65 @@
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/forms/generate.php');
+require_once($CFG->libdir.'/navigationlib.php');
+
 use block_openai_questions\handler;
 
+// We reuse this page both for the initial question text form as well as the edit questions page.
+// During setup, we'll assume which is which based on whether the "id" parameter is set or not (id => generate questions, no id => edit questions)
+// Once the page is set up, if no id parameter is set, we'll check to see if any form data was passed to determine if we actually ARE on the edit questions page or not.
+// If not, we just redirect to the course.
+
+// First, figure out the current course. If passed in the URL, use that; otherwise, grab the session value
+// Also set the URL accordingly
 $courseid = optional_param('id', 1, PARAM_INTEGER);
+$url = null;
 if ($courseid !== 1) {
   $_SESSION["openai_questions_course"] = $courseid;
+  $url = new moodle_url($CFG->wwwroot . "/blocks/openai_questions/generate.php", ['id' => $courseid]);
+} else {
+  $url = new moodle_url($CFG->wwwroot . "/blocks/openai_questions/generate.php");
 }
 
-require_login();
-if (!has_capability('moodle/course:manageactivities', context_course::instance($_SESSION["openai_questions_course"]))) {
+// Then get the course record from this value, check that the user has permission to do this, and add the relevant crumbs to the nav trail
+$course = $DB->get_record('course', array('id' => $_SESSION["openai_questions_course"]), '*', MUST_EXIST);
+
+require_login($course);
+if (!has_capability('moodle/course:manageactivities', context_course::instance($course->id))) {
   throw new \moodle_exception("capability_error", "block_openai_questions", "", get_string('error_capability', 'block_openai_questions'));
 }
 
-$course = $DB->get_record('course', array('id' => $_SESSION["openai_questions_course"]), '*', MUST_EXIST);
-$PAGE->set_context(context_course::instance($_SESSION["openai_questions_course"]));
-$PAGE->set_course($course);
+$PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', ['id' => $course->id]));
+if ($courseid !== 1) {
+  $PAGE->navbar->add(get_string("openai_questions", "block_openai_questions", $url));
+} else {
+  $PAGE->navbar->add(
+    get_string("openai_questions", "block_openai_questions"), 
+    new moodle_url('/blocks/openai_questions/generate.php', ['id' => $course->id])
+  );
+  $PAGE->navbar->add(get_string("editquestions", "block_openai_questions", $url));
+}
 
-$PAGE->set_pagelayout('standard');
+// Set up page
 $pagetitle = get_string('openai_questions', 'block_openai_questions');
+$PAGE->set_course($course);
+$PAGE->set_url($url);
 $PAGE->set_title($pagetitle);
-$PAGE->set_url($CFG->wwwroot . "/blocks/openai_questions/generate.php");
+$PAGE->set_pagelayout('standard');
 
+// If the course id isn't set and data wasn't actually passed, redirect to course. Somebody went to this page directly, I guess
 $mform = new generate_form();
+$fromform = $mform->get_data();
+if ($courseid === 1 && !$fromform) {
+  redirect(new moodle_url('/course/view.php', ['id' => $course->id]));
+}
 
 if ($mform->is_cancelled()) {
 
-  redirect($CFG->wwwroot . "/course/view.php?id=" . $_SESSION["openai_questions_course"]);
+  redirect($CFG->wwwroot . "/course/view.php?id=" . $course->id);
   
-} else if ($fromform = $mform->get_data()) {
+} else if ($fromform) {
+  // The form was submitted, so render the edit questions page with the result
 
   $PAGE->requires->js('/blocks/openai_questions/lib.js');
   $PAGE->set_heading(get_string('editquestions', 'block_openai_questions'));
