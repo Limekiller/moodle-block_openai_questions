@@ -34,11 +34,13 @@ class generate_form extends moodleform {
         $mform->addElement('textarea', 'sourcetext', get_string('sourcetext', 'block_openai_questions'),'wrap="virtual" rows="20" cols="50"');
         $mform->setType('sourcetext', PARAM_TEXT);
 
-        $qtypes = ['multichoice' => 'Multiple choice', 'truefalse' => 'True/False', 'shortanswer' => 'Short answer'];
+        $qtypes = ['truefalse' => 'True/False', 'shortanswer' => 'Short answer', 'multichoice' => 'Multiple choice'];
         $mform->addElement('select', 'qtype', get_string('qtype', 'block_openai_questions'), $qtypes);
+        $mform->addHelpButton('qtype', 'qtype', 'block_openai_questions');
 
         $mform->addElement('text', 'number_of_questions', get_string('numquestions', 'block_openai_questions'));
         $mform->setType('number_of_questions', PARAM_INTEGER);
+        $mform->addHelpButton('number_of_questions', 'numquestions', 'block_openai_questions');
 
         $mform->addElement('hidden', 'courseid', '1');
         $mform->setType('courseid', PARAM_INTEGER);
