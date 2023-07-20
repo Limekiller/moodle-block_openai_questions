@@ -45,7 +45,7 @@ class handler {
      * @return Array: An array of questions parsed from the GPT-3 generation
      */
     public function fetch_response($number_of_questions=3) {
-        $messages = $this->build_messages();
+        $messages = $this->build_messages($number_of_questions);
         array_push($messages, ["role" => "user", "content" => '{"number_of_questions": ' . $number_of_questions . ',  "text": "' . $this->sourcetext . '"}']);
 
         $response = $this->make_api_request($messages);
@@ -64,11 +64,11 @@ class handler {
 
         // This is why I'm not bullish on LLMs in general. It never does EXACTLY what you want. Half the time, it will return the questions
         // in a "questions" array, which isn't what I asked for. Let's check if that's the case and fix that if it is.
-        if ($completion['questions']) {
+        if (array_key_exists("questions", $completion)) {
             $completion = $completion['questions'];
         }
 
-        return $this->validate_response($completion);
+        return $this->remove_blank_questions($completion);
     }
 
     /**
@@ -76,7 +76,7 @@ class handler {
      * This function gets the right example based on the passed question type.
      * @return string: The entire example prompt to pass to GPT-3
      */
-    private function build_messages() {
+    private function build_messages($number_of_questions) {
         $qtype_prompts = [
             'shortanswer' => '[{"question": "On what date did construction start?", "answers": {"A": "19 March 1882"}}, {"question": "Who was the original architect of the basilica?", "answers": {"A": "Francisco de Paula del Villar"}}, {"question": "How much of the project was completed when Gaudi died?", "answers": {"A": "Less than a quarter"}}]',
             'truefalse' => '[{"question": "Construction started on 19 March 1882", "answers": {"A": "True"}}, {"question": "The original architect was Antoni Gaudi", "answers": {"A": "False"}}, {"question": "Over half of the basilica was finished when Gaudi died.", "answers": {"A": "False"}}]',
@@ -89,7 +89,7 @@ class handler {
                 "role" => "system", 
                 "content" => '{"number_of_questions": 3, "text": "On 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete."}',
             ],
-            ["role" => "system", "content" => "Here is an example of the output JSON containing the $this->qtype questions. The response MUST follow this structure:"],
+            ["role" => "system", "content" => "Here is an example of the output JSON containing the number of $this->qtype questions that was requested. You must generate as many questions as possible. Do not only generate three questions. You must generate as many questions as you can."],
             ["role" => "system", "content" => $qtype_prompts[$this->qtype]]
         ];
 
@@ -134,9 +134,9 @@ class handler {
             "model" => $model,
             "messages" => $messages,
             "temperature" => 1,
-            "top_p" => 1,
+            "top_p" => 0.5,
             "frequency_penalty" => 0.25,
-            "presence_penalty" => 0,
+            "presence_penalty" => 0
         ];
         
         $curl = new \curl();
@@ -158,12 +158,16 @@ class handler {
      * @param Array questions: The array of generated questions
      * @return Array: The validated array of questions
      */
-    function validate_response($questions) {
+    function remove_blank_questions($questions) {
         foreach ($questions as $index => $question) {
             if (!$question['question']) {
                 unset($questions[$index]);
                 continue;
             }   
+            if (!array_key_exists('answers', $question)) {
+                unset($questions[$index]);
+                continue;
+            }
             foreach ($question['answers'] as $choice => $text) {
                 if (!$text) {
                     unset($questions[$index]);
