@@ -70,12 +70,8 @@ $PAGE->set_url($url);
 $PAGE->set_title($pagetitle);
 $PAGE->set_pagelayout('standard');
 
-// If the course id isn't set and data wasn't actually passed, redirect to course. Somebody went to this page directly, I guess
 $mform = new generate_form();
 $fromform = $mform->get_data();
-if ($courseid === 1 && !$fromform) {
-  redirect(new moodle_url('/course/view.php', ['id' => $course->id]));
-}
 
 if ($mform->is_cancelled()) {
 
@@ -119,7 +115,7 @@ if ($mform->is_cancelled()) {
       $output .= html_writer::end_div();
 
       $output .= html_writer::start_div('block_openai_questions-button-container');
-        $output .= html_writer::tag('button', '<i class="fa fa-trash"></i>', ['class' => 'block_openai_questions-delete']);
+        $output .= html_writer::tag('button', '<i class="fa fa-trash"></i>', ['class' => 'block_openai_questions-delete', 'title' => 'Remove question']);
       $output .= html_writer::end_div();
 
     $output .= html_writer::end_div();
@@ -132,6 +128,11 @@ if ($mform->is_cancelled()) {
   $PAGE->requires->js_init_call('init', [$_SESSION['openai_questions_course']]);
 
 } else {
+
+  // If the course id isn't set and data wasn't actually passed, redirect to course. Somebody went to this page directly, I guess
+  if ($courseid === 1 && (!$fromform && !file_get_contents('php://input'))) {
+    redirect(new moodle_url('/course/view.php', ['id' => $course->id]));
+  }
 
   $PAGE->set_heading($pagetitle);
   echo $OUTPUT->header();

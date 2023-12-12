@@ -72,9 +72,9 @@ class handler {
     }
 
     /**
-     * The first response to GPT-3 starts with an example so the AI knows what the questions should look like.
+     * The first response to GPT starts with an example so the AI knows what the questions should look like.
      * This function gets the right example based on the passed question type.
-     * @return string: The entire example prompt to pass to GPT-3
+     * @return string: The entire example prompt to pass to GPT
      */
     private function build_messages($number_of_questions) {
         $qtype_prompts = [

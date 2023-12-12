@@ -35,7 +35,7 @@ $string['modellabel'] = 'The model to use in order to generate questions';
 
 $string['sourcetext'] = 'Source text';
 $string['qtype'] = 'Question type';
-$string['qtype_help'] = 'Question types are ordered by their complexity. More complex question types will make GPT less able to generate a large number of questions.';
+$string['qtype_help'] = 'Question types are ordered by their complexity. More complex question types will reduce GPT\'s ability to follow instructions or generate coherent questions.';
 $string['numquestions'] = 'Number of questions to generate';
 $string['numquestions_help'] = 'GPT will be asked to generate this many questions, but it is just a request. Larger input text or more complex question types will limit GPT\'s ability to match the number asked for.';
 $string['notanumber'] = 'Value must be a number that is between 1 and 20';
