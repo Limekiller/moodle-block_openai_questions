@@ -18,7 +18,7 @@
  * Question api endpoint
  *
  * @package    block_openai_questions
- * @copyright  2022 Bryce Yoder (me@bryceyoder.com)
+ * @copyright  2023 Bryce Yoder (me@bryceyoder.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,10 +31,25 @@ require_once(__DIR__ . '/../../../config.php');
 require_once($CFG->libdir . '/questionlib.php');
 global $DB;
 
-$response = json_decode(file_get_contents('php://input'));
+$response = json_decode(file_get_contents('php://input'), true);
+
+// Clean submitted data
+$clean_response = [
+    'courseid' => clean_param($response['courseid'], PARAM_INT),
+    'qtype' => clean_param($response['qtype'], PARAM_NOTAGS),
+    'questions' => []
+];
+foreach ($response['questions'] as $question => $question_data) {
+    $question_text = clean_param($question, PARAM_TEXT);
+    $answer_array = [];
+    foreach ($question_data['answers'] as $answer_key => $answer_value) {
+        $answer_array[$answer_key] = clean_param($answer_value, PARAM_TEXT);
+    }
+    $clean_response['questions'][$question_text] = ['answers' => $answer_array, 'correct' => $question_data['correct']];
+}
 
 require_login();
-$course_context = context_course::instance($response->courseid);
+$course_context = context_course::instance($clean_response['courseid']);
 if (!has_capability('moodle/course:manageactivities', $course_context)) {
     http_response_code(401);
     die();
@@ -53,12 +68,12 @@ foreach ($top_category_id_for_course as $category) {
     }
 }
 
-foreach ($response->questions as $question => $question_data) {
-    $answer_array = $question_data->answers;
+foreach ($clean_response['questions'] as $question => $question_data) {
+    $answer_array = $question_data['answers'];
 
     $question_obj = new stdClass();
     $question_obj->category  = $category_id;
-    $question_obj->qtype     = $response->qtype;
+    $question_obj->qtype     = $clean_response['qtype'];
     $question_obj->createdby = $USER->id;
 
     $form = new stdClass();
@@ -76,9 +91,9 @@ foreach ($response->questions as $question => $question_data) {
     $form->penalty = 0;
     $form->status = 'ready';
 
-    switch ($response->qtype) {
+    switch ($clean_response['qtype']) {
         case 'truefalse':
-            $form->correctanswer = strtolower($answer_array->A) == 'true' ? 1 : 0;
+            $form->correctanswer = strtolower($answer_array['A']) == 'true' ? 1 : 0;
         
             $form->feedbacktrue = array();
             $form->feedbacktrue['format'] = '1';
@@ -91,7 +106,7 @@ foreach ($response->questions as $question => $question_data) {
         
         case 'shortanswer':
             $form->usecase = false;
-            $form->answer = [$answer_array->A];
+            $form->answer = [$answer_array['A']];
             $form->fraction = ['1.0'];
             $form->feedback = [['text' => '', 'format' => '1']];
             break;
@@ -113,12 +128,12 @@ foreach ($response->questions as $question => $question_data) {
             foreach ($answer_array as $letter => $answer) {
                 array_push($form->answer, ['text' => $answer, 'format' => '1']);
                 array_push($form->feedback, ['text' => '', 'format' => '1']);
-                array_push($form->fraction, $question_data->correct == $letter ? '1' : '0');
+                array_push($form->fraction, $question_data['correct'] == $letter ? '1' : '0');
             }
             break;
     }
 
-    \question_bank::get_qtype($response->qtype)->save_question($question_obj, $form);
+    \question_bank::get_qtype($clean_response['qtype'])->save_question($question_obj, $form);
 }
 
 http_response_code(200);
@@ -126,6 +141,6 @@ echo json_encode([
     'response' => 200,
     'message' => 'Questions created successfully!',
     'data' => [
-        'courseid' => $response->courseid
+        'courseid' => $clean_response['courseid']
     ]
 ]);
