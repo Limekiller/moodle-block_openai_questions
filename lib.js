@@ -24,7 +24,11 @@ const init = (Y, courseid) => {
 
     document.querySelectorAll('.block_openai_questions-markCorrectButton').forEach(button => {
         button.addEventListener('click', (e) => {
-            e.target.closest('.block_openai_questions-text-container').querySelector('.block_openai_questions-correct').classList.remove('block_openai_questions-correct')
+            // If the AI didn't mark a correct answer for this question, this will fail
+            // let's just catch it and ignore that
+            try {
+                e.target.closest('.block_openai_questions-text-container').querySelector('.block_openai_questions-correct').classList.remove('block_openai_questions-correct')
+            } catch (e) {}
             e.target.parentElement.querySelector('input').classList.add('block_openai_questions-correct')
         })
     })

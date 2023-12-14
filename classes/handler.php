@@ -68,7 +68,7 @@ class handler {
             $completion = $completion['questions'];
         }
 
-        return $this->remove_blank_questions($completion);
+        return $this->clean_questions($completion);
     }
 
     /**
@@ -153,25 +153,30 @@ class handler {
     }
     
     /**
-     * Given an array of generated questions, go through them and remove any that don't have question text
-     * or have an answer missing text
+     * Given an array of generated questions, filter them for valid questions, and clean the generated text
      * @param Array questions: The array of generated questions
-     * @return Array: The validated array of questions
+     * @return Array: The cleaned array of questions
      */
-    function remove_blank_questions($questions) {
+    function clean_questions($questions) {
+        $cleaned_questions = [];
+
         foreach ($questions as $index => $question) {
-            if (!$question['question']) {
-                unset($questions[$index]);
-                continue;
-            }   
-            if (!array_key_exists('answers', $question)) {
-                unset($questions[$index]);
-                continue;
-            }
-            foreach ($question['answers'] as $choice => $text) {
-                if (!$text) {
-                    unset($questions[$index]);
+            if (array_key_exists('question', $question) && $question['question'] && array_key_exists('answers', $question)) {
+                $cleaned_question = [
+                    'question' => clean_param($question['question'], PARAM_NOTAGS),
+                    'answers' => []
+                ];
+
+                foreach ($question['answers'] as $choice => $text) {
+                    if ($text) {
+                        $cleaned_question['answers'][$choice] = clean_param($text, PARAM_NOTAGS);
+                    }
                 }
+
+                if (array_key_exists('correct', $question)) {
+                    $cleaned_question['correct'] = $question['correct'];
+                }
+                array_push($cleaned_questions, $cleaned_question);
             }
         }
     
