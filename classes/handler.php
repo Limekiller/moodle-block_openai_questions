@@ -89,7 +89,7 @@ class handler {
                 "role" => "system", 
                 "content" => '{"number_of_questions": 3, "text": "On 19 March 1882, construction of the Sagrada Família began under architect Francisco de Paula del Villar. In 1883, when Villar resigned, Gaudí took over as chief architect, transforming the project with his architectural and engineering style, combining Gothic and curvilinear Art Nouveau forms. Gaudí devoted the remainder of his life to the project, and he is buried in the crypt. At the time of his death in 1926, less than a quarter of the project was complete."}',
             ],
-            ["role" => "system", "content" => "Here is an example of the output JSON containing the number of $this->qtype questions that was requested. You must generate as many questions as possible. Do not only generate three questions. You must generate as many questions as you can."],
+            ["role" => "system", "content" => "Here is an example of the output JSON containing the number of $this->qtype questions that was requested. You must try to generate as many questions as were requested. Do not only generate three questions. You must generate the same number of questions that was asked for."],
             ["role" => "system", "content" => $qtype_prompts[$this->qtype]]
         ];
 

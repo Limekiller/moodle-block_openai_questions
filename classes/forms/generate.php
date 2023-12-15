@@ -50,7 +50,7 @@ class generate_form extends moodleform {
 
     public function validation($data, $files) {
         $errors = [];
-        if ($data['number_of_questions'] < 1 || $data['number_of_questions'] > 20) {
+        if ($data['number_of_questions'] < 1 || $data['number_of_questions'] > 10) {
             $errors['number_of_questions'] = get_string('notanumber', 'block_openai_questions');
         }
 
