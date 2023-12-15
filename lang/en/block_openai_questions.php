@@ -38,7 +38,7 @@ $string['qtype'] = 'Question type';
 $string['qtype_help'] = 'Question types are ordered by their complexity. More complex question types will reduce GPT\'s ability to follow instructions or generate coherent questions.';
 $string['numquestions'] = 'Number of questions to generate';
 $string['numquestions_help'] = 'GPT will be asked to generate this many questions, but it is just a request. Larger input text or more complex question types will limit GPT\'s ability to match the number asked for.';
-$string['notanumber'] = 'Value must be a number that is between 1 and 20';
+$string['notanumber'] = 'Value must be a number that is between 1 and 10';
 $string['sourcetextcharlength'] = 'Number of characters must be between 100 and 64,000';
 
 $string['editquestions'] = 'Edit Questions';
