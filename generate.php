@@ -122,10 +122,10 @@ if ($mform->is_cancelled()) {
   }
 
   $output .= html_writer::tag('input', '', ['type' => 'submit', 'value' => get_string('addtoqbank', 'block_openai_questions'), 'class' => 'btn btn-primary block_openai_questions-addToQBank', 'id' => 'addToQBank']);
-  $output .= html_writer::tag('a', '<input type="submit" class="btn btn-secondary" value="' . get_string('cancel', 'block_openai_questions') . '"/>', ['href' => "/course/view.php?id=$fromform->courseid"]);
+  $output .= html_writer::tag('a', '<input type="submit" class="btn btn-secondary" value="' . get_string('cancel', 'block_openai_questions') . '"/>', ['href' => new moodle_url("/course/view.php", array("id" => $fromform->courseid))]);
 
   echo $output;
-  $PAGE->requires->js_init_call('init', [$_SESSION['openai_questions_course']]);
+  $PAGE->requires->js_init_call('init', [$_SESSION['openai_questions_course'], $CFG->wwwroot]);
 
 } else {
 

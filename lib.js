@@ -1,4 +1,4 @@
-const init = (Y, courseid) => {
+const init = (Y, courseid, wwwroot) => {
     document.querySelectorAll('.block_openai_questions-question .block_openai_questions-delete').forEach(button => {
         button.addEventListener('click', e => {
             removeQuestion(e.target.closest('.block_openai_questions-question'))
@@ -11,7 +11,7 @@ const init = (Y, courseid) => {
         e.target.style.pointerEvents = 'none'
         
         const questions = buildQuestionObj()
-        await fetch('/blocks/openai_questions/api/question.php', {
+        await fetch(`${wwwroot}/blocks/openai_questions/api/question.php`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -19,7 +19,7 @@ const init = (Y, courseid) => {
             body: JSON.stringify(questions)
         })
 
-        window.location.href = `/question/edit.php?courseid=${courseid}`
+        window.location.href = `${wwwroot}/question/edit.php?courseid=${courseid}`
     })
 
     document.querySelectorAll('.block_openai_questions-markCorrectButton').forEach(button => {

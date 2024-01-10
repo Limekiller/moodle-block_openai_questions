@@ -31,7 +31,7 @@ class block_openai_questions extends block_base {
     }
 
     public function get_content() {
-        global $PAGE;
+        global $OUTPUT, $PAGE;
 
         $context = context_course::instance($this->page->course->id);
         if (!has_capability('moodle/course:manageactivities', $context)) {
@@ -42,11 +42,11 @@ class block_openai_questions extends block_base {
             return $this->content;
         }
 
-        $this->content         =  new stdClass;
-        $this->content->text   = '<a href="/blocks/openai_questions/generate.php?id=' . 
-            $this->page->course->id . '"><button class="btn btn-primary">' . 
-            get_string('generatequestions', 'block_openai_questions') . 
-        '</button></a>';
+        $this->content = new stdClass;
+        $this->content->text = $OUTPUT->single_button(
+            new moodle_url('/blocks/openai_questions/generate.php', array('id' => $this->page->course->id)),
+            get_string('generatequestions', 'block_openai_questions')
+        );
 
         return $this->content;
     }
